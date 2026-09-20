@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0A0D12;
+  --surface:#12161F;
+  --surface-2:#181D29;
+  --surface-hover:#1F2635;
+  --border:#242B3B;
+  --text:#EAEDF3;
+  --text-dim:#8D96AC;
+  --text-faint:#5B6478;
+  --teal:#5FE1C9;
+  --teal-dim:#2A6E63;
+  --coral:#FF8A5B;
+  --coral-dim:#7A3F27;
+  --gold:#F0C674;
+  --danger:#FF6B6B;
+  --success:#6EE7B7;
+  --radius-s:8px;
+  --radius-m:14px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--surface-hover);border-radius:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+a{color:inherit;}
+button{font-family:inherit;cursor:pointer;}
+h1,h2,h3{font-family:'Fraunces',serif;margin:0;font-weight:600;}
+.app{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{
+  width:236px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:22px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 22px 10px;}
+.brand-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--coral));flex-shrink:0;}
+.brand-name{font-family:'Fraunces',serif;font-size:17px;font-weight:600;letter-spacing:.2px;}
+.nav-group{margin-bottom:4px;}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--radius-s);
+  color:var(--text-dim);font-size:14px;font-weight:500;cursor:pointer;
+  transition:background .15s,color .15s;user-select:none;
+}
+.nav-item:hover{background:var(--surface-hover);color:var(--text);}
+.nav-item.active{background:var(--surface-hover);color:var(--teal);}
+.nav-icon{width:18px;text-align:center;font-size:15px;flex-shrink:0;}
+.nav-sub{margin-left:14px;border-left:1px solid var(--border);padding-left:10px;margin-top:2px;margin-bottom:6px;display:none;}
+.nav-sub.open{display:block;}
+.nav-sub .nav-item{font-size:13px;padding:7px 10px;}
+.sidebar-foot{margin-top:auto;padding:10px;font-size:11px;color:var(--text-faint);border-top:1px solid var(--border);padding-top:14px;}
+
+/* MAIN */
+.main{flex:1;min-width:0;padding:26px 32px 60px 32px;max-width:1180px;}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;gap:16px;flex-wrap:wrap;}
+.page-title{font-size:26px;}
+.page-sub{color:var(--text-dim);font-size:14px;margin-top:4px;}
+.clock-chip{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);padding:9px 16px;border-radius:999px;font-size:14px;color:var(--text-dim);}
+.clock-chip b{color:var(--text);font-weight:600;}
+.bell{position:relative;cursor:pointer;width:38px;height:38px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.bell .dot{position:absolute;top:6px;right:7px;width:8px;height:8px;background:var(--coral);border-radius:50%;display:none;}
+.bell.has-alert .dot{display:block;}
+
+.section{display:none;}
+.section.active{display:block;}
+
+/* CARDS */
+.grid{display:grid;gap:16px;}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-2{grid-template-columns:2fr 1fr;}
+@media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr);}.grid-3{grid-template-columns:1fr;}.grid-2{grid-template-columns:1fr;}}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);
+  padding:20px;
+}
+.stat-card{border-left:3px solid var(--teal);}
+.stat-card.c-coral{border-left-color:var(--coral);}
+.stat-card.c-gold{border-left-color:var(--gold);}
+.stat-card.c-success{border-left-color:var(--success);}
+.stat-label{font-size:12.5px;color:var(--text-dim);margin-bottom:8px;}
+.stat-value{font-family:'Fraunces',serif;font-size:32px;font-weight:600;}
+.stat-note{font-size:12px;color:var(--text-faint);margin-top:6px;}
+
+.hero{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:20px;padding:26px 28px;background:linear-gradient(135deg,var(--surface) 0%,var(--surface-2) 100%);border:1px solid var(--border);border-radius:var(--radius-m);}
+.greeting{font-family:'Fraunces',serif;font-size:30px;font-weight:600;}
+.greeting-sub{color:var(--text-dim);font-size:14.5px;margin-top:6px;}
+.ring-wrap{display:flex;align-items:center;gap:16px;}
+.ring-num{font-family:'Fraunces',serif;font-size:26px;}
+.ring-label{font-size:12px;color:var(--text-dim);}
+
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px 0;}
+.section-head h2{font-size:18px;}
+.btn{
+  background:var(--teal);color:#08201B;border:none;padding:9px 16px;border-radius:999px;
+  font-weight:700;font-size:13.5px;
+}
+.btn:hover{filter:brightness(1.08);}
+.btn.secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--border);}
+.btn.ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border);}
+.btn.small{padding:6px 12px;font-size:12.5px;}
+.btn.danger{background:var(--danger);color:#2c0808;}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:26px;margin-top:14px;}
+.timeline::before{content:'';position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--border);}
+.tl-item{position:relative;padding-bottom:22px;}
+.tl-dot{position:absolute;left:-26px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--surface-hover);border:2px solid var(--text-faint);}
+.tl-item.done .tl-dot{background:var(--success);border-color:var(--success);}
+.tl-item.now .tl-dot{background:var(--coral);border-color:var(--coral);box-shadow:0 0 0 4px rgba(255,138,91,.2);}
+.tl-time{font-size:12px;color:var(--text-dim);margin-bottom:3px;}
+.tl-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-s);padding:12px 14px;}
+.tl-item.now .tl-row{border-color:var(--coral);}
+.tl-name{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px;}
+.now-badge{background:var(--coral);color:#2c1305;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:.3px;}
+.tl-desc{font-size:12.5px;color:var(--text-dim);margin-top:3px;}
+.tl-actions{display:flex;gap:6px;flex-shrink:0;}
+.tag{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);color:var(--text-dim);}
+.tag.prio-High{border-color:var(--danger);color:var(--danger);}
+.tag.prio-Medium{border-color:var(--gold);color:var(--gold);}
+.tag.prio-Low{border-color:var(--teal);color:var(--teal);}
+.icon-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);width:30px;height:30px;border-radius:8px;font-size:13px;}
+.icon-btn:hover{color:var(--text);}
+
+/* TASK LIST TABLE-ish */
+.task-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.task-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-s);padding:13px 16px;}
+.task-row.completed{opacity:.55;}
+.task-row.completed .task-title{text-decoration:line-through;}
+.check{width:20px;height:20px;border-radius:6px;border:2px solid var(--text-faint);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.check.on{background:var(--success);border-color:var(--success);color:#04261a;}
+.task-title{font-weight:600;font-size:14.5px;}
+.task-meta{font-size:12px;color:var(--text-dim);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;}
+.task-row .task-main{flex:1;min-width:0;}
+.demo-flag{font-size:10px;color:var(--text-faint);border:1px dashed var(--text-faint);padding:1px 6px;border-radius:6px;}
+
+/* FORMS / MODAL */
+.overlay{position:fixed;inset:0;background:rgba(5,7,11,.65);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:26px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;}
+.modal h3{font-size:19px;margin-bottom:16px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:inherit;font-size:13.5px;
+}
+.field textarea{resize:vertical;min-height:60px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+.chip-select{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{padding:7px 13px;border-radius:999px;border:1px solid var(--border);font-size:13px;color:var(--text-dim);}
+.chip.sel{background:var(--teal-dim);border-color:var(--teal);color:var(--teal);}
+.chip.sel.coral{background:var(--coral-dim);border-color:var(--coral);color:var(--coral);}
+
+/* NOTIF CENTER */
+.notif-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-s);padding:14px 16px;margin-bottom:10px;}
+.notif-card.pending{border-color:var(--coral);}
+.notif-head{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:4px;}
+.notif-title{font-weight:700;font-size:14.5px;}
+.notif-body{font-size:13px;color:var(--text-dim);margin-top:4px;}
+.notif-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.toast-wrap{position:fixed;top:20px;right:20px;z-index:80;display:flex;flex-direction:column;gap:10px;max-width:340px;}
+.toast{background:var(--surface-2);border:1px solid var(--coral);border-radius:var(--radius-s);padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.4);animation:slidein .25s ease;}
+@keyframes slidein{from{transform:translateX(30px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* PROGRESS */
+.bar-bg{background:var(--surface-2);border-radius:999px;height:9px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--success));border-radius:999px;transition:width .4s;}
+.ring{transform:rotate(-90deg);}
+.ring-track{fill:none;stroke:var(--surface-2);}
+.ring-prog{fill:none;stroke:var(--teal);stroke-linecap:round;transition:stroke-dashoffset .5s;}
+
+/* MISC */
+.empty{color:var(--text-faint);font-size:13.5px;padding:22px 0;text-align:center;}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.small-btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+canvas{max-width:100%;}
+.exercise-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-s);padding:14px 16px;margin-bottom:10px;}
+.exercise-card h4{margin:0 0 4px 0;font-family:'Inter';font-size:14.5px;font-weight:700;}
+.exercise-meta{font-size:12px;color:var(--text-dim);margin-bottom:6px;}
+.exercise-instr{font-size:12.5px;color:var(--text-dim);line-height:1.5;}
+.lib-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+@media(max-width:800px){
+  .sidebar{position:fixed;left:-260px;z-index:60;transition:left .2s;box-shadow:0 0 40px rgba(0,0,0,.5);}
+  .sidebar.open{left:0;}
+  .main{padding:18px;}
+  .menu-toggle{display:flex!important;}
+}
+.menu-toggle{display:none;width:38px;height:38px;border-radius:8px;background:var(--surface);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark"></div><div class="brand-name">Personal Assistant</div></div>
+    <div class="nav-group">
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">◆</span>Dashboard</div>
+      <div class="nav-item" data-page="todo"><span class="nav-icon">☑</span>To-Do List</div>
+      <div class="nav-item" data-page="reminders"><span class="nav-icon">◔</span>Reminders</div>
+      <div class="nav-item" data-page="routines"><span class="nav-icon">↻</span>Routine Planner</div>
+      <div class="nav-item" data-page="goals"><span class="nav-icon">◈</span>Goals</div>
+      <div class="nav-item" data-page="productivity"><span class="nav-icon">▲</span>Productivity</div>
+      <div class="nav-item" data-page="fitness-toggle"><span class="nav-icon">♦</span>Fitness</div>
+      <div class="nav-sub" id="fitness-sub">
+        <div class="nav-item" data-page="fitness-profile">Fitness Profile</div>
+        <div class="nav-item" data-page="fitness-planner">Workout Planner</div>
+        <div class="nav-item" data-page="fitness-maker">Workout Maker</div>
+        <div class="nav-item" data-page="fitness-library">Exercise Library</div>
+        <div class="nav-item" data-page="fitness-tracker">Fitness Tracker</div>
+        <div class="nav-item" data-page="fitness-progress">Progress</div>
+      </div>
+      <div class="nav-item" data-page="notifications"><span class="nav-icon">🔔</span>Notifications</div>
+      <div class="nav-item" data-page="settings"><span class="nav-icon">⚙</span>Settings</div>
+    </div>
+    <div class="sidebar-foot">Your data is saved automatically and stays on this device.</div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="page-sub" id="pageSub">Here's where your day stands right now.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="clock-chip">📅 <b id="topDate">-</b> · <b id="topClock">-</b></div>
+        <div class="bell" id="bellBtn"><span class="dot" id="bellDot"></span>🔔</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="section" id="page-dashboard">
+      <div class="hero">
+        <div>
+          <div class="greeting" id="greetingText">Good evening</div>
+          <div class="greeting-sub" id="greetingSub">Loading your day…</div>
+        </div>
+        <div class="ring-wrap">
+          <svg class="ring" width="86" height="86" viewBox="0 0 86 86">
+            <circle class="ring-track" cx="43" cy="43" r="36" stroke-width="9"/>
+            <circle class="ring-prog" id="dashRing" cx="43" cy="43" r="36" stroke-width="9" stroke-dasharray="226" stroke-dashoffset="226"/>
+          </svg>
+          <div><div class="ring-num" id="dashPct">0%</div><div class="ring-label">completed today</div></div>
+        </div>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="card stat-card"><div class="stat-label">Today's Tasks</div><div class="stat-value" id="statTotal">0</div></div>
+        <div class="card stat-card c-success"><div class="stat-label">Completed</div><div class="stat-value" id="statDone">0</div></div>
+        <div class="card stat-card c-coral"><div class="stat-label">Pending</div><div class="stat-value" id="statPending">0</div></div>
+        <div class="card stat-card c-gold"><div class="stat-label">Current Streak</div><div class="stat-value" id="statStreak">0d</div></div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top:16px;">
+        <div class="card">
+          <div class="section-head" style="margin-top:0;"><h2>Today's Timeline</h2><span style="font-size:12px;color:var(--text-faint);" id="tlDate"></span></div>
+          <div class="timeline" id="dashTimeline"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <div class="stat-label">Current Task</div>
+            <div id="currentTaskBox" style="margin-top:8px;"></div>
+          </div>
+          <div class="card">
+            <div class="stat-label">Next Up</div>
+            <div id="nextTaskBox" style="margin-top:8px;"></div>
+          </div>
+          <div class="card">
+            <div class="stat-label">Productivity Score</div>
+            <div class="stat-value" id="prodScore" style="margin-top:6px;">0</div>
+            <div class="bar-bg" style="margin-top:10px;"><div class="bar-fill" id="prodBar" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODO -->
+    <div class="section" id="page-todo">
+      <div class="section-head" style="margin-top:0;"><h2>All Tasks</h2><button class="btn" id="addTaskBtn">+ New Task</button></div>
+      <div class="task-list" id="todoList"></div>
+    </div>
+
+    <!-- REMINDERS -->
+    <div class="section" id="page-reminders">
+      <div class="card" style="margin-bottom:18px;">
+        <div class="stat-label">Notification permission</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+          <span id="permStatus" style="font-size:13.5px;color:var(--text-dim);">Checking…</span>
+          <button class="btn small" id="reqPermBtn">Enable Browser Notifications</button>
+        </div>
+      </div>
+      <div class="section-head" style="margin-top:0;"><h2>Upcoming Reminders</h2></div>
+      <div class="task-list" id="upcomingReminders"></div>
+    </div>
+
+    <!-- ROUTINES -->
+    <div class="section" id="page-routines">
+      <div class="section-head" style="margin-top:0;"><h2>Daily Routine</h2><button class="btn" id="addRoutineBtn">+ Add Routine Item</button></div>
+      <p class="page-sub" style="margin-bottom:14px;">Routine items repeat every day and can automatically add today's tasks with reminders.</p>
+      <div class="task-list" id="routineList"></div>
+    </div>
+
+    <!-- GOALS -->
+    <div class="section" id="page-goals">
+      <div class="section-head" style="margin-top:0;"><h2>Goals</h2><button class="btn" id="addGoalBtn">+ New Goal</button></div>
+      <div class="grid grid-3" id="goalsGrid"></div>
+    </div>
+
+    <!-- PRODUCTIVITY -->
+    <div class="section" id="page-productivity">
+      <div class="grid grid-4">
+        <div class="card stat-card"><div class="stat-label">Daily Score</div><div class="stat-value" id="pDaily">0</div></div>
+        <div class="card stat-card c-coral"><div class="stat-label">Weekly Avg</div><div class="stat-value" id="pWeekly">0</div></div>
+        <div class="card stat-card c-gold"><div class="stat-label">Monthly Avg</div><div class="stat-value" id="pMonthly">0</div></div>
+        <div class="card stat-card c-success"><div class="stat-label">Routine Completion</div><div class="stat-value" id="pRoutine">0%</div></div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="stat-label" style="margin-bottom:10px;">Last 7 Days — Task Completion</div>
+        <canvas id="chartWeekly" height="90"></canvas>
+      </div>
+    </div>
+
+    <!-- FITNESS PROFILE -->
+    <div class="section" id="page-fitness-profile">
+      <div class="card" style="max-width:560px;">
+        <h3 style="margin-bottom:16px;">Your Fitness Profile</h3>
+        <div class="row2">
+          <div class="field"><label>Age</label><input type="number" id="fpAge" min="10" max="100"></div>
+          <div class="field"><label>Height (cm)</label><input type="number" id="fpHeight" min="100" max="230"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Weight (kg)</label><input type="number" id="fpWeight" min="30" max="250"></div>
+          <div class="field"><label>Fitness Level</label>
+            <select id="fpLevel"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Fitness Goal</label>
+          <select id="fpGoal">
+            <option>Lose Weight</option><option>Gain Weight</option><option>Maintain Weight</option>
+            <option>Build Muscle</option><option>Improve Strength</option><option>Improve Fitness</option>
+          </select>
+        </div>
+        <div class="field"><label>Available Equipment</label>
+          <div class="chip-select" id="fpEquip">
+            <div class="chip" data-val="Bodyweight">Bodyweight only</div>
+            <div class="chip" data-val="Dumbbells">Dumbbells</div>
+            <div class="chip" data-val="Barbell">Barbell</div>
+            <div class="chip" data-val="Bench">Bench</div>
+            <div class="chip" data-val="Pull-up Bar">Pull-up Bar</div>
+            <div class="chip" data-val="Resistance Band">Resistance Band</div>
+            <div class="chip" data-val="Full Gym">Full Gym</div>
+          </div>
+        </div>
+        <button class="btn" id="saveProfileBtn" style="margin-top:8px;">Save Profile</button>
+        <div id="profileSavedMsg" style="font-size:12.5px;color:var(--success);margin-top:10px;display:none;">Profile saved.</div>
+      </div>
+    </div>
+
+    <!-- FITNESS PLANNER -->
+    <div class="section" id="page-fitness-planner">
+      <div class="section-head" style="margin-top:0;"><h2>Weekly Workout Planner</h2></div>
+      <p class="page-sub" style="margin-bottom:14px;">Assign a focus to each day. Generate a workout for any day from the Workout Maker.</p>
+      <div class="grid grid-4" id="plannerGrid" style="grid-template-columns:repeat(7,1fr);"></div>
+    </div>
+
+    <!-- FITNESS MAKER -->
+    <div class="section" id="page-fitness-maker">
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 style="margin-bottom:14px;font-size:17px;">Workout Maker</h3>
+          <div class="field"><label>Body Part</label>
+            <select id="mkBodyPart">
+              <option>Full Body</option><option>Abs</option><option>Arms</option><option>Biceps</option>
+              <option>Chest</option><option>Back</option><option>Shoulders</option><option>Legs</option>
+            </select>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Available Time (min)</label><input type="number" id="mkTime" value="30" min="10" max="90"></div>
+            <div class="field"><label>Fitness Level</label><select id="mkLevel"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+          </div>
+          <div class="field"><label>Equipment for this workout</label>
+            <div class="chip-select" id="mkEquip">
+              <div class="chip" data-val="Bodyweight">Bodyweight</div>
+              <div class="chip" data-val="Dumbbells">Dumbbells</div>
+              <div class="chip" data-val="Barbell">Barbell</div>
+              <div class="chip" data-val="Bench">Bench</div>
+              <div class="chip" data-val="Pull-up Bar">Pull-up Bar</div>
+              <div class="chip" data-val="Resistance Band">Resistance Band</div>
+            </div>
+          </div>
+          <button class="btn" id="genWorkoutBtn" style="margin-top:6px;">Generate Workout</button>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:14px;font-size:17px;">Your Workout</h3>
+          <div id="generatedWorkout"><div class="empty">Set your options and generate a workout.</div></div>
+          <button class="btn secondary small" id="logWorkoutBtn" style="margin-top:12px;display:none;">Log this as completed session</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXERCISE LIBRARY -->
+    <div class="section" id="page-fitness-library">
+      <div class="section-head" style="margin-top:0;"><h2>Exercise Library</h2></div>
+      <div class="lib-filters" id="libFilters"></div>
+      <div id="libList"></div>
+    </div>
+
+    <!-- FITNESS TRACKER -->
+    <div class="section" id="page-fitness-tracker">
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 style="font-size:17px;margin-bottom:12px;">Log Weight & Measurements</h3>
+          <div class="row2">
+            <div class="field"><label>Weight (kg)</label><input type="number" id="logWeight"></div>
+            <div class="field"><label>Waist (cm)</label><input type="number" id="logWaist"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Chest (cm)</label><input type="number" id="logChest"></div>
+            <div class="field"><label>Arms (cm)</label><input type="number" id="logArms"></div>
+          </div>
+          <button class="btn small" id="logMetricBtn">Save Entry</button>
+        </div>
+        <div class="card">
+          <h3 style="font-size:17px;margin-bottom:12px;">Session Stats</h3>
+          <div class="grid grid-2" style="gap:10px;">
+            <div class="stat-card card" style="padding:14px;"><div class="stat-label">Workout Streak</div><div class="stat-value" id="workoutStreak" style="font-size:24px;">0d</div></div>
+            <div class="stat-card c-coral card" style="padding:14px;"><div class="stat-label">Sessions (30d)</div><div class="stat-value" id="sessions30" style="font-size:24px;">0</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="section-head"><h2>Session History</h2></div>
+      <div class="task-list" id="sessionHistory"></div>
+    </div>
+
+    <!-- FITNESS PROGRESS -->
+    <div class="section" id="page-fitness-progress">
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:10px;">Weight Trend</div>
+        <canvas id="chartWeight" height="90"></canvas>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="stat-label" style="margin-bottom:10px;">Weekly Workout Sessions</div>
+        <canvas id="chartSessions" height="90"></canvas>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="section" id="page-notifications">
+      <div class="section-head" style="margin-top:0;"><h2>Notification Center</h2><button class="btn ghost small" id="clearNotifsBtn">Clear read</button></div>
+      <div id="notifCenter"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="section" id="page-settings">
+      <div class="card" style="max-width:560px;">
+        <h3 style="margin-bottom:14px;">Settings</h3>
+        <div class="field"><label>Browser Notifications</label>
+          <button class="btn small" id="settingsPermBtn">Request Permission</button>
+          <span id="settingsPermStatus" style="margin-left:10px;font-size:12.5px;color:var(--text-dim);"></span>
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>Demo data</label>
+          <p style="font-size:12.5px;color:var(--text-dim);margin:0 0 10px 0;">Sample tasks and routines are marked "demo" so you can tell them apart from what you've entered yourself.</p>
+          <button class="btn secondary small" id="clearDemoBtn">Remove all demo data</button>
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>Reset</label>
+          <p style="font-size:12.5px;color:var(--text-dim);margin:0 0 10px 0;">This permanently deletes all tasks, routines, goals and fitness data stored on this device.</p>
+          <button class="btn danger small" id="resetAllBtn">Erase all data</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- TASK MODAL -->
+<div class="overlay" id="taskModal">
+  <div class="modal">
+    <h3 id="taskModalTitle">New Task</h3>
+    <input type="hidden" id="taskId">
+    <div class="field"><label>Task Name</label><input type="text" id="taskName" placeholder="e.g. Study Java"></div>
+    <div class="field"><label>Description</label><textarea id="taskDesc" placeholder="Optional details"></textarea></div>
+    <div class="row2">
+      <div class="field"><label>Date</label><input type="date" id="taskDate"></div>
+      <div class="field"><label>Priority</label><select id="taskPriority"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Start Time</label><input type="time" id="taskStart"></div>
+      <div class="field"><label>End Time</label><input type="time" id="taskEnd"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Category</label>
+        <select id="taskCategory"><option>College</option><option>Work</option><option>Personal</option><option>Fitness</option><option>Other</option></select>
+      </div>
+      <div class="field"><label>Repeat</label><select id="taskRepeat"><option>None</option><option>Daily</option><option>Weekly</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Reminder</label><select id="taskReminderOn"><option value="1">On</option><option value="0">Off</option></select></div>
+      <div class="field"><label>Remind Me</label>
+        <select id="taskReminderOffset">
+          <option value="0">At task time</option>
+          <option value="5">5 minutes before</option>
+          <option value="10">10 minutes before</option>
+          <option value="15">15 minutes before</option>
+          <option value="30">30 minutes before</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="taskCancelBtn">Cancel</button>
+      <button class="btn" id="taskSaveBtn">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROUTINE MODAL -->
+<div class="overlay" id="routineModal">
+  <div class="modal">
+    <h3>New Routine Item</h3>
+    <input type="hidden" id="routineId">
+    <div class="row2">
+      <div class="field"><label>Time</label><input type="time" id="routineTime"></div>
+      <div class="field"><label>Reminder</label><select id="routineReminder"><option value="1">On</option><option value="0">Off</option></select></div>
+    </div>
+    <div class="field"><label>Activity Name</label><input type="text" id="routineName" placeholder="e.g. Workout"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="routineCancelBtn">Cancel</button>
+      <button class="btn" id="routineSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- GOAL MODAL -->
+<div class="overlay" id="goalModal">
+  <div class="modal">
+    <h3>New Goal</h3>
+    <div class="field"><label>Goal Title</label><input type="text" id="goalTitle" placeholder="e.g. Read 12 books"></div>
+    <div class="row2">
+      <div class="field"><label>Target</label><input type="number" id="goalTarget" value="10"></div>
+      <div class="field"><label>Unit</label><input type="text" id="goalUnit" placeholder="e.g. books, kg, sessions"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="goalCancelBtn">Cancel</button>
+      <button class="btn" id="goalSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   EXERCISE DATABASE
+========================================================= */
+const EXERCISES = [
+ {id:'e1',name:'Bodyweight Squat',bodyPart:'Legs',equipment:['Bodyweight'],level:['Beginner','Intermediate','Advanced'],type:'reps',reps:'15',rest:30,instructions:'Stand feet shoulder-width apart, lower hips back and down until thighs are parallel to the floor, then drive back up through your heels.'},
+ {id:'e2',name:'Walking Lunges',bodyPart:'Legs',equipment:['Bodyweight'],level:['Beginner','Intermediate','Advanced'],type:'reps',reps:'12 each leg',rest:30,instructions:'Step forward into a lunge, lower the back knee toward the floor, push through the front heel to step into the next lunge.'},
+ {id:'e3',name:'Dumbbell Goblet Squat',bodyPart:'Legs',equipment:['Dumbbells'],level:['Intermediate','Advanced'],type:'reps',reps:'12',rest:45,instructions:'Hold a dumbbell vertically at chest height, squat down keeping your chest tall, then stand back up.'},
+ {id:'e4',name:'Barbell Back Squat',bodyPart:'Legs',equipment:['Barbell'],level:['Intermediate','Advanced'],type:'reps',reps:'5',rest:120,instructions:'Bar racked on your upper back, feet shoulder width, squat to depth keeping your spine neutral, drive up powerfully.'},
+ {id:'e5',name:'Glute Bridge',bodyPart:'Legs',equipment:['Bodyweight'],level:['Beginner','Intermediate','Advanced'],type:'reps',reps:'15',rest:30,instructions:'Lie on your back, knees bent, feet flat. Squeeze glutes to lift hips until your body forms a straight line, then lower.'},
+ {id:'e6',name:'Push-Up',bodyPart:'Chest',equipment:['Bodyweight'],level:['Beginner','Intermediate','Advanced'],type:'reps',reps:'12',rest:30,instructions:'Hands slightly wider than shoulders, lower chest to the floor keeping your body straight, press back up.'},
+ {id:'e7',name:'Dumbbell Bench Press',bodyPart:'Chest',equipment:['Dumbbells','Bench'],level:['Intermediate','Advanced'],type:'reps',reps:'10',rest:60,instructions:'Lying on a bench, press dumbbells from chest level straight up, then lower under control.'},
+ {id:'e8',name:'Barbell Bench Press',bodyPart:'Chest',equipment:['Barbell','Bench'],level:['Intermediate','Advanced'],type:'reps',reps:'6',rest:120,instructions:'Lower the bar to your mid-chest with control, then press it back up to full arm extension.'},
+ {id:'e9',name:'Incline Push-Up',bodyPart:'Chest',equipment:['Bodyweight'],level:['Beginner'],type:'reps',reps:'12',rest:30,instructions:'Hands on a raised surface, lower your chest toward it and press back up. Easier variation of a standard push-up.'},
+ {id:'e10',name:'Chest Fly',bodyPart:'Chest',equipment:['Dumbbells','Bench'],level:['Intermediate','Advanced'],type:'reps',reps:'12',rest:60,instructions:'Lying on a bench with arms slightly bent, open arms out wide then bring dumbbells back together over your chest.'},
+ {id:'e11',name:'Bent-Over Row',bodyPart:'Back',equipment:['Dumbbells'],level:['Intermediate','Advanced'],type:'reps',reps:'12',rest:60,instructions:'Hinge at the hips, back flat, pull dumbbells toward your ribs squeezing your shoulder blades together.'},
+ {id:'e12',name:'Pull-Up',bodyPart:'Back',equipment:['Pull-up Bar'],level:['Intermediate','Advanced'],type:'reps',reps:'8',rest:90,instructions:'Hang from the bar with an overhand grip, pull your chin above the bar, lower with control.'},
+ {id:'e13',name:'Superman',bodyPart:'Back',equipment:['Bodyweight'],level:['Beginner','Intermediate'],type:'time',duration:30,rest:20,instructions:'Lie face down, lift arms and legs off the floor simultaneously, hold, then lower.'},
+ {id:'e14',name:'Barbell Deadlift',bodyPart:'Back',equipment:['Barbell'],level:['Intermediate','Advanced'],type:'reps',reps:'5',rest:120,instructions:'Hinge down to grip the bar, chest up and spine neutral, drive through your heels to stand tall.'},
+ {id:'e15',name:'Band Row',bodyPart:'Back',equipment:['Resistance Band'],level:['Beginner','Intermediate'],type:'reps',reps:'15',rest:30,instructions:'Anchor the band, pull the handles toward your torso while squeezing your shoulder blades together.'},
+ {id:'e16',name:'Pike Push-Up',bodyPart:'Shoulders',equipment:['Bodyweight'],level:['Intermediate','Advanced'],type:'reps',reps:'10',rest:45,instructions:'Hips high in a pike position, lower the crown of your head toward the floor and press back up.'},
+ {id:'e17',name:'Dumbbell Shoulder Press',bodyPart:'Shoulders',equipment:['Dumbbells'],level:['Intermediate','Advanced'],type:'reps',reps:'10',rest:60,instructions:'Press dumbbells overhead from shoulder height until arms are fully extended, then lower with control.'},
+ {id:'e18',name:'Lateral Raise',bodyPart:'Shoulders',equipment:['Dumbbells'],level:['Beginner','Intermediate','Advanced'],type:'reps',reps:'15',rest:30,instructions:'Raise dumbbells out to the sides until arms are parallel to the floor, then lower slowly.'},
+ {id:'e19',name:'Band Pull-Apart',bodyPart:'Shoulders',equipment:['Resistance Band'],level:['Beginner'],type:'reps',reps:'15',rest:20,instructions:'Hold the band at shoulder height, pull it apart by squeezing your shoulder blades together.'},
+ {id:'e20',name:'Bicep Curl',bodyPart:'Biceps',equipment:['Dumbbells'],level:['Beginner','Intermediate','Advanced'],type:'reps',reps:'12',rest:30,instructions:'Curl dumbbells up toward your shoulders keeping elbows pinned to your sides, lower slowly.'},
+ {id:'e21',name:'Band Bicep Curl',bodyPart:'Biceps',equipment:['Resistance Band'],level:['Beginner'],type:'reps',reps:'15',rest:20,instructions:'Stand on the band, curl the handles up toward your shoulders and lower under control.'},
+ {id:'e22',name:'Chin-Up',bodyPart:'Biceps',equipment:['Pull-up Bar'],level:['Intermediate','Advanced'],type:'reps',reps:'8',rest:90,instructions:'Underhand grip on the bar, pull your chin above it focusing on your biceps, lower slowly.'},
+ {id:'e23',name:'Tricep Dip',bodyPart:'Arms',equipment:['Bodyweight','Bench'],level:['Beginner','Intermediate'],type:'reps',reps:'12',rest:30,instructions:'Hands on a bench behind you, lower your body by bending your elbows, then press back up.'},
+ {id:'e24',name:'Overhead Tricep Extension',bodyPart:'Arms',equipment:['Dumbbells'],level:['Intermediate'],type:'reps',reps:'12',rest:45,instructions:'Hold a dumbbell overhead with both hands, lower it behind your head, then extend back up.'},
+ {id:'e25',name:'Diamond Push-Up',bodyPart:'Arms',equipment:['Bodyweight'],level:['Intermediate','Advanced'],type:'reps',reps:'10',rest:40,instructions:'Hands close together forming a diamond shape, lower your chest and press back up to target triceps.'},
+ {id:'e26',name:'Plank',bodyPart:'Abs',equipment:['Bodyweight'],level:['Beginner','Intermediate','Advanced'],type:'time',duration:45,rest:30,instructions:'Forearms and toes on the floor, body in a straight line, brace your core and hold.'},
+ {id:'e27',name:'Bicycle Crunch',bodyPart:'Abs',equipment:['Bodyweight'],level:['Beginner','Intermediate'],type:'reps',reps:'20',rest:20,instructions:'Lying on your back, bring opposite elbow to opposite knee in a pedaling motion.'},
+ {id:'e28',name:'Leg Raise',bodyPart:'Abs',equipment:['Bodyweight'],level:['Intermediate','Advanced'],type:'reps',reps:'15',rest:30,instructions:'Lying flat, raise straight legs toward the ceiling keeping your lower back pressed into the floor, lower slowly.'},
+ {id:'e29',name:'Russian Twist',bodyPart:'Abs',equipment:['Bodyweight'],level:['Beginner','Intermediate'],type:'reps',reps:'20',rest:20,instructions:'Sit with knees bent, lean back slightly, twist your torso side to side tapping the floor each side.'},
+ {id:'e30',name:'Mountain Climbers',bodyPart:'Abs',equipment:['Bodyweight'],level:['Beginner','Intermediate','Advanced'],type:'time',duration:30,rest:20,instructions:'In a plank position, drive knees alternately toward your chest at a quick pace.'},
+ {id:'e31',name:'Burpees',bodyPart:'Full Body',equipment:['Bodyweight'],level:['Intermediate','Advanced'],type:'reps',reps:'12',rest:40,instructions:'Drop into a squat, kick feet back to a plank, do a push-up, jump feet in and explode up into a jump.'},
+ {id:'e32',name:'Jumping Jacks',bodyPart:'Full Body',equipment:['Bodyweight'],level:['Beginner','Intermediate','Advanced'],type:'time',duration:40,rest:20,instructions:'Jump feet out while raising arms overhead, then jump back to start. Keep a steady rhythm.'},
+ {id:'e33',name:'Kettlebell-style Dumbbell Swing',bodyPart:'Full Body',equipment:['Dumbbells'],level:['Intermediate','Advanced'],type:'reps',reps:'15',rest:45,instructions:'Hinge at the hips and swing the dumbbell forward to shoulder height using hip drive, not your arms.'},
+ {id:'e34',name:'Full Gym Circuit',bodyPart:'Full Body',equipment:['Full Gym'],level:['Intermediate','Advanced'],type:'reps',reps:'10',rest:60,instructions:'Rotate through squat rack, cable row, and bench press stations for a complete full-body circuit.'},
+ {id:'e35',name:'High Knees',bodyPart:'Full Body',equipment:['Bodyweight'],level:['Beginner','Intermediate'],type:'time',duration:30,rest:20,instructions:'Run in place driving your knees up toward your chest as fast as you can with good posture.'},
+];
+
+/* =========================================================
+   STATE / STORAGE
+========================================================= */
+const STORAGE_KEY = 'assistant-data-v1';
+let state = null;
+
+function defaultState(){
+  const today = todayStr();
+  return {
+    tasks: seedDemoTasks(today),
+    routines: seedDemoRoutines(),
+    goals: [],
+    fitnessProfile: null,
+    workoutSessions: [],
+    bodyMetrics: [],
+    notifications: [],
+    firedTriggers: [],
+    weeklyHistory: {},
+    settings: {},
+  };
+}
+function seedDemoTasks(today){
+  return [
+    mkTask({name:'Wake Up',description:'Start the day',date:today,startTime:'06:00',endTime:'06:15',priority:'Low',category:'Personal',repeat:'Daily',reminder:false,demo:true}),
+    mkTask({name:'Workout',description:'Morning training session',date:today,startTime:'07:00',endTime:'08:00',priority:'Medium',category:'Fitness',repeat:'Daily',reminder:true,demo:true}),
+    mkTask({name:'College',description:'',date:today,startTime:'09:00',endTime:'13:00',priority:'High',category:'College',repeat:'Weekly',reminder:true,demo:true}),
+    mkTask({name:'Lunch',description:'',date:today,startTime:'13:00',endTime:'13:45',priority:'Low',category:'Personal',repeat:'Daily',reminder:false,demo:true}),
+    mkTask({name:'Project Work',description:'',date:today,startTime:'17:00',endTime:'18:00',priority:'Medium',category:'Work',repeat:'None',reminder:true,demo:true}),
+    mkTask({name:'Study Java',description:'',date:today,startTime:'18:00',endTime:'19:00',priority:'High',category:'College',repeat:'Daily',reminder:true,demo:true}),
+    mkTask({name:'Dinner',description:'',date:today,startTime:'20:00',endTime:'20:30',priority:'Low',category:'Personal',repeat:'Daily',reminder:false,demo:true}),
+    mkTask({name:'Revision',description:'',date:today,startTime:'21:00',endTime:'21:45',priority:'Medium',category:'College',repeat:'Daily',reminder:true,demo:true}),
+  ];
+}
+function seedDemoRoutines(){
+  return [
+    {id:uid(),time:'06:00',name:'Wake Up',reminder:true,demo:true,seriesId:'r1'},
+    {id:uid(),time:'06:30',name:'Workout',reminder:true,demo:true,seriesId:'r2'},
+    {id:uid(),time:'08:00',name:'Breakfast',reminder:false,demo:true,seriesId:'r3'},
+    {id:uid(),time:'09:00',name:'College',reminder:true,demo:true,seriesId:'r4'},
+    {id:uid(),time:'17:00',name:'Study',reminder:true,demo:true,seriesId:'r5'},
+    {id:uid(),time:'19:00',name:'Project',reminder:true,demo:true,seriesId:'r6'},
+    {id:uid(),time:'22:30',name:'Sleep',reminder:false,demo:true,seriesId:'r7'},
+  ];
+}
+function mkTask(t){
+  return Object.assign({
+    id: uid(), seriesId: uid(), completed:false, completedAt:null, skippedDates:[], demo:false,
+    reminderOffset:0
+  }, t);
+}
+function uid(){ return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); }
+
+async function loadState(){
+  try{
+    const r = await window.storage.get(STORAGE_KEY, false);
+    if(r && r.value){ state = JSON.parse(r.value); }
+    else { state = defaultState(); await saveState(); }
+  }catch(e){
+    state = defaultState();
+    await saveState();
+  }
+  if(!state.weeklyHistory) state.weeklyHistory = {};
+  if(!state.firedTriggers) state.firedTriggers = [];
+}
+let saveTimer=null;
+function saveState(){
+  return new Promise((resolve)=>{
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async ()=>{
+      try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }catch(e){ console.error('save failed', e); }
+      resolve();
+    }, 150);
+  });
+}
+
+/* =========================================================
+   DATE / TIME HELPERS
+========================================================= */
+function todayStr(d){ const dt = d||new Date(); return dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate()); }
+function pad(n){ return n<10?'0'+n:''+n; }
+function formatTime12(hhmm){
+  if(!hhmm) return '';
+  let [h,m] = hhmm.split(':').map(Number);
+  const ap = h>=12?'PM':'AM';
+  h = h%12; if(h===0) h=12;
+  return h+':'+pad(m)+' '+ap;
+}
+function formatDateLong(dStr){
+  const d = new Date(dStr+'T00:00:00');
+  return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+function taskDateTime(task, timeField){
+  return new Date(task.date+'T'+(timeField||task.startTime)+':00');
+}
+function weekdayOf(dateStr){ return new Date(dateStr+'T00:00:00').getDay(); }
+
+/* =========================================================
+   RECURRING TASK GENERATION
+========================================================= */
+function ensureRecurringInstances(){
+  const today = todayStr();
+  const seriesSeenToday = new Set(state.tasks.filter(t=>t.date===today).map(t=>t.seriesId));
+  const templates = [];
+  const bySeries = {};
+  state.tasks.forEach(t=>{ if(t.repeat!=='None'){ if(!bySeries[t.seriesId] || t.date > bySeries[t.seriesId].date) bySeries[t.seriesId]=t; } });
+  Object.values(bySeries).forEach(t=>{
+    if(seriesSeenToday.has(t.seriesId)) return;
+    if(t.date >= today) return;
+    if(t.repeat==='Daily'){
+      state.tasks.push(Object.assign({}, t, {id:uid(), date:today, completed:false, completedAt:null}));
+    } else if(t.repeat==='Weekly'){
+      if(weekdayOf(t.date) === weekdayOf(today)){
+        state.tasks.push(Object.assign({}, t, {id:uid(), date:today, completed:false, completedAt:null}));
+      }
+    }
+  });
+}
+
+/* =========================================================
+   GETTERS
+========================================================= */
+function tasksForDate(dateStr){
+  return state.tasks.filter(t=>t.date===dateStr).sort((a,b)=> a.startTime.localeCompare(b.startTime));
+}
+function isTaskNow(task){
+  const now = new Date();
+  if(task.date !== todayStr()) return false;
+  const start = taskDateTime(task, task.startTime);
+  const end = task.endTime ? taskDateTime(task, task.endTime) : new Date(start.getTime()+30*60000);
+  return now>=start && now<=end;
+}
+function currentTask(){
+  return tasksForDate(todayStr()).find(t=>!t.completed && isTaskNow(t));
+}
+function nextTask(){
+  const now = new Date();
+  return tasksForDate(todayStr()).filter(t=>!t.completed && taskDateTime(t,t.startTime) > now).sort((a,b)=>a.startTime.localeCompare(b.startTime))[0];
+}
+function computeStreak(){
+  let streak=0;
+  for(let i=0;i<365;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = todayStr(d);
+    const dayTasks = tasksForDate(ds);
+    if(dayTasks.length===0){ if(i===0) continue; else break; }
+    const doneCount = dayTasks.filter(t=>t.completed).length;
+    if(doneCount>0) streak++; else break;
+  }
+  return streak;
+}
+function computeProductivity(dateStr){
+  const dayTasks = tasksForDate(dateStr);
+  const taskScore = dayTasks.length ? (dayTasks.filter(t=>t.completed).length/dayTasks.length)*60 : 0;
+  const routines = state.routines.length;
+  const routineScore = routines ? 20 : 0; // routines existing counts toward structure; simplified
+  const goals = state.goals;
+  const goalScore = goals.length ? (goals.reduce((s,g)=> s + Math.min(1,(g.progress||0)/(g.target||1)),0)/goals.length)*20 : 0;
+  return Math.round(Math.min(100, taskScore+routineScore+goalScore));
+}
+function workoutStreakCalc(){
+  let streak=0;
+  for(let i=0;i<60;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = todayStr(d);
+    const has = state.workoutSessions.some(s=>s.date===ds);
+    if(has) streak++; else if(i===0) continue; else break;
+  }
+  return streak;
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+const PAGE_META = {
+  dashboard:['Dashboard',"Here's where your day stands right now."],
+  todo:['To-Do List','Everything on your plate, in one place.'],
+  reminders:['Reminders','Manage when and how you get nudged.'],
+  routines:['Routine Planner','Your recurring daily rhythm.'],
+  goals:['Goals','Track progress toward what matters.'],
+  productivity:['Productivity','How your effort adds up over time.'],
+  'fitness-profile':['Fitness Profile','Tell us about you to personalize workouts.'],
+  'fitness-planner':['Workout Planner','Plan your training week.'],
+  'fitness-maker':['Workout Maker','Generate a workout that fits right now.'],
+  'fitness-library':['Exercise Library','Browse exercises by body part.'],
+  'fitness-tracker':['Fitness Tracker','Log sessions and measurements.'],
+  'fitness-progress':['Progress','Your fitness trend over time.'],
+  notifications:['Notifications','Every reminder, in one feed.'],
+  settings:['Settings','Manage your data and preferences.'],
+};
+function goToPage(page){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el = document.getElementById('page-'+page);
+  if(el) el.classList.add('active');
+  const nav = document.querySelector('.nav-item[data-page="'+page+'"]');
+  if(nav) nav.classList.add('active');
+  const meta = PAGE_META[page];
+  if(meta){ document.getElementById('pageTitle').textContent = meta[0]; document.getElementById('pageSub').textContent = meta[1]; }
+  renderAll();
+  if(window.innerWidth<=800) document.getElementById('sidebar').classList.remove('open');
+}
+document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    const page = item.getAttribute('data-page');
+    if(page==='fitness-toggle'){
+      document.getElementById('fitness-sub').classList.toggle('open');
+      return;
+    }
+    goToPage(page);
+  });
+});
+document.getElementById('menuToggle').addEventListener('click', ()=> document.getElementById('sidebar').classList.toggle('open'));
+
+/* =========================================================
+   CLOCK
+========================================================= */
+function tickClock(){
+  const now = new Date();
+  document.getElementById('topDate').textContent = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('topClock').textContent = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+
+/* =========================================================
+   RENDERERS
+========================================================= */
+function renderAll(){
+  renderDashboard();
+  renderTodo();
+  renderReminders();
+  renderRoutines();
+  renderGoals();
+  renderProductivity();
+  renderFitnessProfile();
+  renderPlanner();
+  renderLibrary();
+  renderTracker();
+  renderProgress();
+  renderNotifCenter();
+  updateBell();
+}
+
+function greetingWord(){
+  const h = new Date().getHours();
+  if(h<12) return 'Good morning';
+  if(h<17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function renderDashboard(){
+  const today = todayStr();
+  const dayTasks = tasksForDate(today);
+  const done = dayTasks.filter(t=>t.completed).length;
+  const pct = dayTasks.length ? Math.round((done/dayTasks.length)*100) : 0;
+
+  document.getElementById('greetingText').textContent = greetingWord()+'.';
+  document.getElementById('greetingSub').textContent = formatDateLong(today)+' — '+(dayTasks.length-done)+' task'+((dayTasks.length-done)!==1?'s':'')+' left today.';
+  document.getElementById('dashPct').textContent = pct+'%';
+  const circumference = 226;
+  document.getElementById('dashRing').setAttribute('stroke-dashoffset', circumference - (circumference*pct/100));
+
+  document.getElementById('statTotal').textContent = dayTasks.length;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statPending').textContent = dayTasks.length-done;
+  document.getElementById('statStreak').textContent = computeStreak()+'d';
+
+  document.getElementById('tlDate').textContent = formatDateLong(today);
+  document.getElementById('dashTimeline').innerHTML = renderTimelineHTML(dayTasks);
+
+  const cur = currentTask();
+  document.getElementById('currentTaskBox').innerHTML = cur ? taskMiniBox(cur) : '<div class="empty" style="padding:6px 0;">Nothing scheduled right now.</div>';
+  const nxt = nextTask();
+  document.getElementById('nextTaskBox').innerHTML = nxt ? taskMiniBox(nxt) : '<div class="empty" style="padding:6px 0;">No more tasks today.</div>';
+
+  const score = computeProductivity(today);
+  document.getElementById('prodScore').textContent = score;
+  document.getElementById('prodBar').style.width = score+'%';
+
+  wireTimelineActions('dashTimeline');
+}
+function taskMiniBox(t){
+  return '<div style="font-weight:700;font-size:15px;">'+esc(t.name)+'</div>'+
+    '<div style="font-size:12.5px;color:var(--text-dim);margin-top:4px;">'+formatTime12(t.startTime)+(t.endTime?' – '+formatTime12(t.endTime):'')+' · '+t.category+'</div>';
+}
+function renderTimelineHTML(dayTasks){
+  if(!dayTasks.length) return '<div class="empty">No tasks scheduled for today. Add one from the To-Do List.</div>';
+  return dayTasks.map(t=>{
+    const now = isTaskNow(t) && !t.completed;
+    return '<div class="tl-item '+(t.completed?'done':'')+' '+(now?'now':'')+'" data-id="'+t.id+'">'+
+      '<div class="tl-dot"></div>'+
+      '<div class="tl-time">'+formatTime12(t.startTime)+(t.endTime?' – '+formatTime12(t.endTime):'')+'</div>'+
+      '<div class="tl-row">'+
+        '<div class="task-main">'+
+          '<div class="tl-name">'+(t.completed?'✅ ':'')+esc(t.name)+(now?'<span class="now-badge">NOW</span>':'')+(t.demo?'<span class="demo-flag">demo</span>':'')+'</div>'+
+          (t.description?'<div class="tl-desc">'+esc(t.description)+'</div>':'')+
+          '<div class="badge-row"><span class="tag prio-'+t.priority+'">'+t.priority+'</span><span class="tag">'+t.category+'</span></div>'+
+        '</div>'+
+        '<div class="tl-actions">'+
+          (!t.completed?'<button class="icon-btn" data-act="complete" title="Mark complete">✓</button>':'')+
+          '<button class="icon-btn" data-act="edit" title="Edit">✎</button>'+
+        '</div>'+
+      '</div></div>';
+  }).join('');
+}
+function wireTimelineActions(containerId){
+  const el = document.getElementById(containerId);
+  el.querySelectorAll('[data-act]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      const id = e.target.closest('.tl-item').dataset.id;
+      const act = btn.dataset.act;
+      if(act==='complete') completeTask(id);
+      if(act==='edit') openTaskModal(id);
+    };
+  });
+}
+
+function renderTodo(){
+  const list = document.getElementById('todoList');
+  const sorted = [...state.tasks].sort((a,b)=> (a.date+a.startTime).localeCompare(b.date+b.startTime));
+  if(!sorted.length){ list.innerHTML = '<div class="empty">No tasks yet. Create your first one.</div>'; return; }
+  list.innerHTML = sorted.map(t=>{
+    return '<div class="task-row '+(t.completed?'completed':'')+'" data-id="'+t.id+'">'+
+      '<div class="check '+(t.completed?'on':'')+'" data-act="toggle">'+(t.completed?'✓':'')+'</div>'+
+      '<div class="task-main">'+
+        '<div class="task-title">'+esc(t.name)+(t.demo?'<span class="demo-flag" style="margin-left:8px;">demo</span>':'')+'</div>'+
+        '<div class="task-meta"><span>'+formatDateLong(t.date)+'</span><span>'+formatTime12(t.startTime)+(t.endTime?' – '+formatTime12(t.endTime):'')+'</span>'+
+        '<span class="tag prio-'+t.priority+'">'+t.priority+'</span><span class="tag">'+t.category+'</span>'+
+        (t.repeat!=='None'?'<span class="tag">↻ '+t.repeat+'</span>':'')+
+        (t.reminder?'<span class="tag">🔔 '+(t.reminderOffset>0?t.reminderOffset+'m before':'at time')+'</span>':'')+
+        '</div>'+
+      '</div>'+
+      '<div class="tl-actions">'+
+        '<button class="icon-btn" data-act="edit">✎</button>'+
+        '<button class="icon-btn" data-act="skip" title="Skip today">⏭</button>'+
+        '<button class="icon-btn" data-act="delete" title="Delete">🗑</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  list.querySelectorAll('[data-act]').forEach(btn=>{
+    btn.onclick=(e)=>{
+      const id = e.target.closest('.task-row').dataset.id;
+      const act = btn.dataset.act;
+      if(act==='toggle') toggleTask(id);
+      if(act==='edit') openTaskModal(id);
+      if(act==='delete') deleteTask(id);
+      if(act==='skip') skipTask(id);
+    };
+  });
+}
+
+function renderReminders(){
+  const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+  document.getElementById('permStatus').textContent = perm==='granted' ? 'Enabled — you will get browser alerts.' : perm==='denied' ? 'Blocked — enable notifications in your browser settings.' : 'Not enabled yet.';
+  document.getElementById('reqPermBtn').style.display = perm==='granted' ? 'none':'inline-block';
+
+  const upcoming = state.tasks.filter(t=>t.reminder && !t.completed && t.date>=todayStr())
+    .sort((a,b)=>(a.date+a.startTime).localeCompare(b.date+b.startTime)).slice(0,20);
+  const box = document.getElementById('upcomingReminders');
+  if(!upcoming.length){ box.innerHTML = '<div class="empty">No reminders scheduled.</div>'; return; }
+  box.innerHTML = upcoming.map(t=>{
+    return '<div class="task-row"><div class="task-main">'+
+      '<div class="task-title">🔔 '+esc(t.name)+'</div>'+
+      '<div class="task-meta"><span>'+formatDateLong(t.date)+'</span><span>'+formatTime12(t.startTime)+'</span>'+
+      '<span class="tag">'+(t.reminderOffset>0? t.reminderOffset+' min before':'at task time')+'</span></div>'+
+    '</div></div>';
+  }).join('');
+}
+
+function renderRoutines(){
+  const list = document.getElementById('routineList');
+  const sorted = [...state.routines].sort((a,b)=>a.time.localeCompare(b.time));
+  if(!sorted.length){ list.innerHTML='<div class="empty">No routine items yet.</div>'; return; }
+  list.innerHTML = sorted.map(r=>{
+    return '<div class="task-row" data-id="'+r.id+'"><div class="task-main">'+
+      '<div class="task-title">'+formatTime12(r.time)+' — '+esc(r.name)+(r.demo?'<span class="demo-flag" style="margin-left:8px;">demo</span>':'')+'</div>'+
+      '<div class="task-meta">'+(r.reminder?'<span class="tag">🔔 reminder on</span>':'<span class="tag">no reminder</span>')+'</div>'+
+    '</div><div class="tl-actions"><button class="icon-btn" data-act="edit">✎</button><button class="icon-btn" data-act="delete">🗑</button></div></div>';
+  }).join('');
+  list.querySelectorAll('[data-act]').forEach(btn=>{
+    btn.onclick=(e)=>{
+      const id = e.target.closest('.task-row').dataset.id;
+      if(btn.dataset.act==='delete'){ state.routines = state.routines.filter(r=>r.id!==id); saveState(); renderRoutines(); }
+      if(btn.dataset.act==='edit'){ openRoutineModal(id); }
+    };
+  });
+}
+
+function renderGoals(){
+  const grid = document.getElementById('goalsGrid');
+  if(!state.goals.length){ grid.innerHTML = '<div class="empty">No goals yet. Add one to start tracking progress.</div>'; return; }
+  grid.innerHTML = state.goals.map(g=>{
+    const pct = Math.min(100, Math.round(((g.progress||0)/(g.target||1))*100));
+    return '<div class="card" data-id="'+g.id+'">'+
+      '<div style="display:flex;justify-content:space-between;"><div class="stat-label">'+esc(g.title)+'</div><button class="icon-btn" data-act="del">🗑</button></div>'+
+      '<div class="stat-value" style="font-size:22px;margin:6px 0;">'+(g.progress||0)+' / '+g.target+' '+esc(g.unit||'')+'</div>'+
+      '<div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%"></div></div>'+
+      '<div class="small-btn-row">'+
+        '<button class="btn secondary small" data-act="inc">+1</button>'+
+        '<button class="btn ghost small" data-act="dec">-1</button>'+
+      '</div></div>';
+  }).join('');
+  grid.querySelectorAll('[data-act]').forEach(btn=>{
+    btn.onclick=(e)=>{
+      const id = e.target.closest('[data-id]').dataset.id;
+      const g = state.goals.find(x=>x.id===id);
+      if(btn.dataset.act==='inc') g.progress = (g.progress||0)+1;
+      if(btn.dataset.act==='dec') g.progress = Math.max(0,(g.progress||0)-1);
+      if(btn.dataset.act==='del') state.goals = state.goals.filter(x=>x.id!==id);
+      saveState(); renderGoals(); renderDashboard();
+    };
+  });
+}
+
+let weeklyChart;
+function renderProductivity(){
+  const today = todayStr();
+  document.getElementById('pDaily').textContent = computeProductivity(today);
+  const last7 = []; const labels=[];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const ds=todayStr(d); last7.push(computeProductivity(ds)); labels.push(d.toLocaleDateString('en-US',{weekday:'short'})); }
+  const weekAvg = Math.round(last7.reduce((a,b)=>a+b,0)/last7.length);
+  document.getElementById('pWeekly').textContent = weekAvg;
+  let monthSum=0; let monthCount=0;
+  for(let i=0;i<30;i++){ const d=new Date(); d.setDate(d.getDate()-i); const ds=todayStr(d); if(tasksForDate(ds).length){ monthSum+=computeProductivity(ds); monthCount++; } }
+  document.getElementById('pMonthly').textContent = monthCount? Math.round(monthSum/monthCount):0;
+  const routinePct = state.routines.length ? 100 : 0;
+  document.getElementById('pRoutine').textContent = routinePct+'%';
+
+  const ctx = document.getElementById('chartWeekly');
+  if(ctx && window.Chart){
+    if(weeklyChart) weeklyChart.destroy();
+    weeklyChart = new Chart(ctx, {
+      type:'bar',
+      data:{labels, datasets:[{label:'Productivity score', data:last7, backgroundColor:'#5FE1C9', borderRadius:6, maxBarThickness:34}]},
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,max:100,grid:{color:'#242B3B'},ticks:{color:'#8D96AC'}},x:{grid:{display:false},ticks:{color:'#8D96AC'}}}}
+    });
+  }
+}
+
+function renderFitnessProfile(){
+  const p = state.fitnessProfile;
+  if(p){
+    document.getElementById('fpAge').value = p.age||'';
+    document.getElementById('fpHeight').value = p.height||'';
+    document.getElementById('fpWeight').value = p.weight||'';
+    document.getElementById('fpLevel').value = p.level||'Beginner';
+    document.getElementById('fpGoal').value = p.goal||'Improve Fitness';
+    document.querySelectorAll('#fpEquip .chip').forEach(c=> c.classList.toggle('sel', (p.equipment||[]).includes(c.dataset.val)));
+  }
+}
+document.querySelectorAll('#fpEquip .chip').forEach(c=> c.onclick = ()=> c.classList.toggle('sel'));
+document.querySelectorAll('#mkEquip .chip').forEach(c=> c.onclick = ()=> c.classList.toggle('sel'));
+document.getElementById('saveProfileBtn').onclick = async ()=>{
+  state.fitnessProfile = {
+    age: +document.getElementById('fpAge').value || null,
+    height: +document.getElementById('fpHeight').value || null,
+    weight: +document.getElementById('fpWeight').value || null,
+    level: document.getElementById('fpLevel').value,
+    goal: document.getElementById('fpGoal').value,
+    equipment: [...document.querySelectorAll('#fpEquip .chip.sel')].map(c=>c.dataset.val),
+  };
+  await saveState();
+  const msg = document.getElementById('profileSavedMsg'); msg.style.display='block';
+  setTimeout(()=> msg.style.display='none', 2000);
+};
+
+const PLANNER_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function renderPlanner(){
+  const grid = document.getElementById('plannerGrid');
+  if(!state.settings.plannerFocus) state.settings.plannerFocus = {};
+  grid.innerHTML = PLANNER_DAYS.map((d,i)=>{
+    const val = state.settings.plannerFocus[i] || 'Rest';
+    return '<div class="card" style="padding:14px;"><div class="stat-label" style="margin-bottom:8px;">'+d+'</div>'+
+    '<select data-day="'+i+'" style="width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px;font-size:12.5px;">'+
+    ['Rest','Full Body','Abs','Arms','Biceps','Chest','Back','Shoulders','Legs'].map(o=>'<option '+(o===val?'selected':'')+'>'+o+'</option>').join('')+
+    '</select></div>';
+  }).join('');
+  grid.querySelectorAll('select').forEach(sel=>{
+    sel.onchange = ()=>{ state.settings.plannerFocus[sel.dataset.day] = sel.value; saveState(); };
+  });
+}
+
+let currentGeneratedWorkout = null;
+document.getElementById('genWorkoutBtn').onclick = ()=>{
+  const bodyPart = document.getElementById('mkBodyPart').value;
+  const timeAvail = +document.getElementById('mkTime').value || 30;
+  const level = document.getElementById('mkLevel').value;
+  const equip = [...document.querySelectorAll('#mkEquip .chip.sel')].map(c=>c.dataset.val);
+  const equipment = equip.length ? equip : ['Bodyweight'];
+  const goal = state.fitnessProfile ? state.fitnessProfile.goal : 'Improve Fitness';
+
+  let pool = EXERCISES.filter(ex=>{
+    const bodyMatch = bodyPart==='Full Body' ? true : ex.bodyPart===bodyPart || ex.bodyPart==='Full Body';
+    const equipMatch = ex.equipment.some(eq=> equipment.includes(eq));
+    const levelIdx = {'Beginner':0,'Intermediate':1,'Advanced':2};
+    const levelMatch = ex.level.includes(level);
+    return bodyMatch && equipMatch && levelMatch;
+  });
+  if(!pool.length) pool = EXERCISES.filter(ex=> ex.equipment.includes('Bodyweight'));
+
+  let scheme = {sets:3, restNote:45};
+  if(goal==='Improve Strength'){ scheme = {sets:5, restNote:120}; }
+  else if(goal==='Build Muscle' || goal==='Gain Weight'){ scheme = {sets:4, restNote:75}; }
+  else if(goal==='Lose Weight' || goal==='Improve Fitness'){ scheme = {sets:3, restNote:25}; }
+  else { scheme = {sets:3, restNote:50}; }
+
+  // shuffle pool for variety
+  pool = [...pool].sort(()=>Math.random()-0.5);
+  const picked=[]; let timeUsed=0;
+  for(const ex of pool){
+    const perSetSecs = (ex.type==='time'? ex.duration : 40) + scheme.restNote;
+    const exerciseTime = (perSetSecs*scheme.sets)/60;
+    if(timeUsed+exerciseTime > timeAvail && picked.length>=3) break;
+    picked.push(Object.assign({}, ex, {sets:scheme.sets, restNote:scheme.restNote}));
+    timeUsed += exerciseTime;
+    if(picked.length>=8) break;
+  }
+  currentGeneratedWorkout = {bodyPart, level, goal, timeAvail, exercises:picked, estMinutes:Math.round(timeUsed)};
+  renderGeneratedWorkout();
+};
+function renderGeneratedWorkout(){
+  const box = document.getElementById('generatedWorkout');
+  const w = currentGeneratedWorkout;
+  if(!w || !w.exercises.length){ box.innerHTML='<div class="empty">No matching exercises for that combination — try different equipment.</div>'; return; }
+  box.innerHTML = '<div style="font-size:12.5px;color:var(--text-dim);margin-bottom:12px;">~'+w.estMinutes+' min · '+w.bodyPart+' · goal: '+w.goal+'</div>'+
+    w.exercises.map(ex=>'<div class="exercise-card"><h4>'+ex.name+'</h4>'+
+      '<div class="exercise-meta">'+ex.sets+' sets × '+(ex.type==='time'? ex.duration+'s':ex.reps)+' · rest '+ex.restNote+'s</div>'+
+      '<div class="exercise-instr">'+ex.instructions+'</div></div>').join('');
+  document.getElementById('logWorkoutBtn').style.display='inline-block';
+}
+document.getElementById('logWorkoutBtn').onclick = async ()=>{
+  if(!currentGeneratedWorkout) return;
+  state.workoutSessions.push({
+    id:uid(), date:todayStr(), bodyPart:currentGeneratedWorkout.bodyPart,
+    duration:currentGeneratedWorkout.estMinutes,
+    exercises: currentGeneratedWorkout.exercises.map(e=>e.name), demo:false,
+  });
+  await saveState();
+  renderTracker(); renderProgress();
+  showToast('Workout logged','Nice work — your session was saved to your history.');
+};
+
+function renderLibrary(){
+  const cats = ['All','Abs','Arms','Biceps','Chest','Back','Shoulders','Legs','Full Body'];
+  const filterEl = document.getElementById('libFilters');
+  if(!filterEl.dataset.wired){
+    filterEl.innerHTML = cats.map(c=>'<div class="chip'+(c==='All'?' sel':'')+'" data-cat="'+c+'">'+c+'</div>').join('');
+    filterEl.dataset.wired='1';
+    filterEl.querySelectorAll('.chip').forEach(c=>{
+      c.onclick=()=>{ filterEl.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); renderLibraryList(c.dataset.cat); };
+    });
+  }
+  renderLibraryList('All');
+}
+function renderLibraryList(cat){
+  const list = document.getElementById('libList');
+  const items = cat==='All' ? EXERCISES : EXERCISES.filter(e=>e.bodyPart===cat);
+  list.innerHTML = items.map(ex=>'<div class="exercise-card"><h4>'+ex.name+'</h4>'+
+    '<div class="exercise-meta">'+ex.bodyPart+' · '+ex.equipment.join(', ')+' · '+ex.level.join('/')+'</div>'+
+    '<div class="exercise-instr">'+ex.instructions+'</div></div>').join('');
+}
+
+document.getElementById('logMetricBtn').onclick = async ()=>{
+  const weight = +document.getElementById('logWeight').value || null;
+  const waist = +document.getElementById('logWaist').value || null;
+  const chest = +document.getElementById('logChest').value || null;
+  const arms = +document.getElementById('logArms').value || null;
+  if(!weight && !waist && !chest && !arms){ showToast('Nothing to save','Enter at least one measurement first.'); return; }
+  state.bodyMetrics.push({id:uid(), date:todayStr(), weight, waist, chest, arms});
+  await saveState();
+  ['logWeight','logWaist','logChest','logArms'].forEach(id=>document.getElementById(id).value='');
+  renderTracker(); renderProgress();
+  showToast('Entry saved','Your measurements were added to your progress history.');
+};
+
+function renderTracker(){
+  document.getElementById('workoutStreak').textContent = workoutStreakCalc()+'d';
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-30);
+  document.getElementById('sessions30').textContent = state.workoutSessions.filter(s=> new Date(s.date) >= cutoff).length;
+
+  const hist = document.getElementById('sessionHistory');
+  const sorted = [...state.workoutSessions].sort((a,b)=> b.date.localeCompare(a.date));
+  if(!sorted.length){ hist.innerHTML = '<div class="empty">No workout sessions logged yet.</div>'; return; }
+  hist.innerHTML = sorted.slice(0,20).map(s=>'<div class="task-row"><div class="task-main">'+
+    '<div class="task-title">'+s.bodyPart+' session</div>'+
+    '<div class="task-meta"><span>'+formatDateLong(s.date)+'</span><span>'+s.duration+' min</span><span>'+s.exercises.length+' exercises</span></div>'+
+    '</div></div>').join('');
+}
+
+let weightChart, sessionsChart;
+function renderProgress(){
+  const wctx = document.getElementById('chartWeight');
+  const metrics = [...state.bodyMetrics].sort((a,b)=>a.date.localeCompare(b.date)).filter(m=>m.weight);
+  if(wctx && window.Chart){
+    if(weightChart) weightChart.destroy();
+    weightChart = new Chart(wctx, {
+      type:'line',
+      data:{labels: metrics.map(m=>m.date.slice(5)), datasets:[{label:'Weight (kg)', data:metrics.map(m=>m.weight), borderColor:'#FF8A5B', backgroundColor:'rgba(255,138,91,.15)', fill:true, tension:.3}]},
+      options:{plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#242B3B'},ticks:{color:'#8D96AC'}},x:{grid:{display:false},ticks:{color:'#8D96AC'}}}}
+    });
+  }
+  const sctx = document.getElementById('chartSessions');
+  const weekLabels=[]; const weekCounts=[];
+  for(let i=5;i>=0;i--){
+    const start = new Date(); start.setDate(start.getDate()-(i*7+6));
+    const end = new Date(); end.setDate(end.getDate()-(i*7));
+    const count = state.workoutSessions.filter(s=>{ const d=new Date(s.date); return d>=start && d<=end; }).length;
+    weekLabels.push('Wk '+(6-i)); weekCounts.push(count);
+  }
+  if(sctx && window.Chart){
+    if(sessionsChart) sessionsChart.destroy();
+    sessionsChart = new Chart(sctx, {
+      type:'bar',
+      data:{labels:weekLabels, datasets:[{label:'Sessions', data:weekCounts, backgroundColor:'#5FE1C9', borderRadius:6, maxBarThickness:34}]},
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#242B3B'},ticks:{color:'#8D96AC',stepSize:1}},x:{grid:{display:false},ticks:{color:'#8D96AC'}}}}
+    });
+  }
+}
+
+function renderNotifCenter(){
+  const box = document.getElementById('notifCenter');
+  const sorted = [...state.notifications].sort((a,b)=> b.time - a.time);
+  if(!sorted.length){ box.innerHTML = '<div class="empty">No notifications yet. They will appear here when a task time arrives.</div>'; return; }
+  box.innerHTML = sorted.slice(0,40).map(n=>{
+    const pending = n.status==='pending';
+    return '<div class="notif-card '+(pending?'pending':'')+'" data-id="'+n.id+'">'+
+      '<div class="notif-head"><span>'+new Date(n.time).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span><span>'+n.status+'</span></div>'+
+      '<div class="notif-title">'+esc(n.title)+'</div>'+
+      '<div class="notif-body">'+esc(n.body)+'</div>'+
+      (pending?('<div class="notif-actions">'+
+        '<button class="btn small" data-act="start">Start Task</button>'+
+        '<button class="btn secondary small" data-act="snooze5">Snooze 5m</button>'+
+        '<button class="btn secondary small" data-act="snooze10">Snooze 10m</button>'+
+        '<button class="btn ghost small" data-act="complete">Mark Complete</button>'+
+      '</div>'):'')+
+      '</div>';
+  }).join('');
+  box.querySelectorAll('[data-act]').forEach(btn=>{
+    btn.onclick=()=>{
+      const id = btn.closest('.notif-card').dataset.id;
+      const n = state.notifications.find(x=>x.id===id);
+      if(!n) return;
+      if(btn.dataset.act==='complete'){ n.status='done'; if(n.taskId) completeTask(n.taskId,true); }
+      if(btn.dataset.act==='start'){ n.status='done'; }
+      if(btn.dataset.act.startsWith('snooze')){
+        const mins = btn.dataset.act==='snooze5'?5:10;
+        n.status='snoozed';
+        const t = state.tasks.find(x=>x.id===n.taskId);
+        if(t){
+          const snoozeKey = n.taskId+'-'+todayStr()+'-snoozeUntil';
+          state.snoozeMap = state.snoozeMap||{};
+          state.snoozeMap[t.id] = Date.now()+mins*60000;
+        }
+      }
+      saveState(); renderNotifCenter(); updateBell();
+    };
+  });
+}
+function updateBell(){
+  const hasPending = state.notifications.some(n=>n.status==='pending');
+  document.getElementById('bellBtn').classList.toggle('has-alert', hasPending);
+}
+document.getElementById('bellBtn').onclick = ()=> goToPage('notifications');
+document.getElementById('clearNotifsBtn').onclick = ()=>{
+  state.notifications = state.notifications.filter(n=>n.status==='pending');
+  saveState(); renderNotifCenter();
+};
+
+/* =========================================================
+   TASK ACTIONS
+========================================================= */
+function toggleTask(id){
+  const t = state.tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.completed = !t.completed;
+  t.completedAt = t.completed ? Date.now() : null;
+  saveState(); renderAll();
+}
+function completeTask(id, skipRender){
+  const t = state.tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.completed = true; t.completedAt = Date.now();
+  saveState();
+  if(!skipRender) renderAll();
+}
+function skipTask(id){
+  const t = state.tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.skippedDates.push(todayStr());
+  t.completed = true; t.completedAt = null;
+  saveState(); renderAll();
+}
+function deleteTask(id){
+  state.tasks = state.tasks.filter(t=>t.id!==id);
+  saveState(); renderAll();
+}
+
+/* =========================================================
+   MODALS
+========================================================= */
+const taskModal = document.getElementById('taskModal');
+document.getElementById('addTaskBtn').onclick = ()=> openTaskModal(null);
+document.getElementById('taskCancelBtn').onclick = ()=> taskModal.classList.remove('open');
+function openTaskModal(id){
+  const t = id ? state.tasks.find(x=>x.id===id) : null;
+  document.getElementById('taskModalTitle').textContent = t ? 'Edit Task' : 'New Task';
+  document.getElementById('taskId').value = id||'';
+  document.getElementById('taskName').value = t? t.name : '';
+  document.getElementById('taskDesc').value = t? t.description : '';
+  document.getElementById('taskDate').value = t? t.date : todayStr();
+  document.getElementById('taskStart').value = t? t.startTime : '09:00';
+  document.getElementById('taskEnd').value = t? t.endTime||'' : '';
+  document.getElementById('taskPriority').value = t? t.priority : 'Medium';
+  document.getElementById('taskCategory').value = t? t.category : 'Personal';
+  document.getElementById('taskRepeat').value = t? t.repeat : 'None';
+  document.getElementById('taskReminderOn').value = t? (t.reminder?'1':'0') : '1';
+  document.getElementById('taskReminderOffset').value = t? (t.reminderOffset||0) : 0;
+  taskModal.classList.add('open');
+}
+document.getElementById('taskSaveBtn').onclick = async ()=>{
+  const id = document.getElementById('taskId').value;
+  const name = document.getElementById('taskName').value.trim();
+  if(!name){ alert('Please enter a task name.'); return; }
+  const data = {
+    name,
+    description: document.getElementById('taskDesc').value.trim(),
+    date: document.getElementById('taskDate').value || todayStr(),
+    startTime: document.getElementById('taskStart').value || '09:00',
+    endTime: document.getElementById('taskEnd').value || '',
+    priority: document.getElementById('taskPriority').value,
+    category: document.getElementById('taskCategory').value,
+    repeat: document.getElementById('taskRepeat').value,
+    reminder: document.getElementById('taskReminderOn').value==='1',
+    reminderOffset: +document.getElementById('taskReminderOffset').value,
+  };
+  if(id){
+    const t = state.tasks.find(x=>x.id===id);
+    Object.assign(t, data);
+  } else {
+    state.tasks.push(mkTask(Object.assign({demo:false}, data)));
+  }
+  await saveState();
+  taskModal.classList.remove('open');
+  renderAll();
+};
+
+const routineModal = document.getElementById('routineModal');
+document.getElementById('addRoutineBtn').onclick = ()=> openRoutineModal(null);
+document.getElementById('routineCancelBtn').onclick = ()=> routineModal.classList.remove('open');
+function openRoutineModal(id){
+  const r = id ? state.routines.find(x=>x.id===id) : null;
+  document.getElementById('routineId').value = id||'';
+  document.getElementById('routineTime').value = r? r.time : '09:00';
+  document.getElementById('routineName').value = r? r.name : '';
+  document.getElementById('routineReminder').value = r? (r.reminder?'1':'0') : '1';
+  routineModal.classList.add('open');
+}
+document.getElementById('routineSaveBtn').onclick = async ()=>{
+  const id = document.getElementById('routineId').value;
+  const name = document.getElementById('routineName').value.trim();
+  if(!name){ alert('Please enter an activity name.'); return; }
+  const time = document.getElementById('routineTime').value || '09:00';
+  const reminder = document.getElementById('routineReminder').value==='1';
+  if(id){
+    const r = state.routines.find(x=>x.id===id);
+    Object.assign(r, {name, time, reminder});
+  } else {
+    const seriesId = uid();
+    state.routines.push({id:uid(), name, time, reminder, demo:false, seriesId});
+    // also create today's task instance so it appears on timeline
+    state.tasks.push(mkTask({name, description:'Routine item', date:todayStr(), startTime:time, endTime:'', priority:'Low', category:'Personal', repeat:'Daily', reminder, demo:false, seriesId}));
+  }
+  await saveState();
+  routineModal.classList.remove('open');
+  renderAll();
+};
+
+const goalModal = document.getElementById('goalModal');
+document.getElementById('addGoalBtn').onclick = ()=> goalModal.classList.add('open');
+document.getElementById('goalCancelBtn').onclick = ()=> goalModal.classList.remove('open');
+document.getElementById('goalSaveBtn').onclick = async ()=>{
+  const title = document.getElementById('goalTitle').value.trim();
+  const target = +document.getElementById('goalTarget').value || 1;
+  const unit = document.getElementById('goalUnit').value.trim();
+  if(!title){ alert('Please enter a goal title.'); return; }
+  state.goals.push({id:uid(), title, target, unit, progress:0});
+  await saveState();
+  goalModal.classList.remove('open');
+  document.getElementById('goalTitle').value=''; document.getElementById('goalUnit').value='';
+  renderGoals();
+};
+
+/* =========================================================
+   NOTIFICATIONS ENGINE
+========================================================= */
+document.getElementById('reqPermBtn').onclick = requestPerm;
+document.getElementById('settingsPermBtn').onclick = requestPerm;
+async function requestPerm(){
+  if(!('Notification' in window)){ alert('This browser does not support notifications.'); return; }
+  const p = await Notification.requestPermission();
+  renderReminders(); renderSettingsPerm();
+}
+function renderSettingsPerm(){
+  const perm = ('Notification' in window)? Notification.permission : 'unsupported';
+  document.getElementById('settingsPermStatus').textContent = perm;
+}
+
+function checkNotifications(){
+  ensureRecurringInstances();
+  const now = Date.now();
+  let firedAny=false;
+  state.tasks.forEach(t=>{
+    if(t.completed || !t.reminder || t.date!==todayStr()) return;
+    const start = taskDateTime(t, t.startTime).getTime();
+    const triggerTime = start - (t.reminderOffset||0)*60000;
+    const snoozeUntil = (state.snoozeMap||{})[t.id];
+    const effectiveTrigger = snoozeUntil && snoozeUntil>triggerTime ? snoozeUntil : triggerTime;
+    const key = t.id+'-'+effectiveTrigger;
+    if(now >= effectiveTrigger && now < effectiveTrigger + 90000 && !state.firedTriggers.includes(key)){
+      state.firedTriggers.push(key);
+      const offsetTxt = t.reminderOffset>0 ? ' in '+t.reminderOffset+' minutes' : ' now';
+      const title = t.reminderOffset>0 ? '⏰ Upcoming: '+t.name : '🔔 Time for: '+t.name;
+      const body = 'It\'s '+formatTime12(t.startTime)+(t.reminderOffset>0? '. '+t.name+' starts'+offsetTxt+'.' : '. You planned to do this now.');
+      state.notifications.push({id:uid(), taskId:t.id, title, body, time:now, status:'pending'});
+      fireBrowserNotification(title, body);
+      showToast(title, body, t.id);
+      firedAny=true;
+    }
+  });
+  if(firedAny){ saveState(); renderNotifCenter(); updateBell(); renderDashboard(); }
+}
+function fireBrowserNotification(title, body){
+  if('Notification' in window && Notification.permission==='granted'){
+    try{ new Notification(title, {body}); }catch(e){}
+  }
+}
+function showToast(title, body, taskId){
+  const wrap = document.getElementById('toastWrap');
+  const div = document.createElement('div');
+  div.className='toast';
+  div.innerHTML = '<div style="font-weight:700;font-size:13.5px;">'+esc(title)+'</div>'+
+    '<div style="font-size:12.5px;color:var(--text-dim);margin:6px 0 10px 0;">'+esc(body)+'</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
+    (taskId?'<button class="btn small" data-a="c">Mark Complete</button><button class="btn secondary small" data-a="s">Snooze 5m</button>':'')+
+    '<button class="btn ghost small" data-a="x">Dismiss</button></div>';
+  wrap.appendChild(div);
+  div.querySelectorAll('[data-a]').forEach(b=>{
+    b.onclick = ()=>{
+      if(b.dataset.a==='c') completeTask(taskId);
+      if(b.dataset.a==='s'){ state.snoozeMap = state.snoozeMap||{}; state.snoozeMap[taskId]=Date.now()+5*60000; saveState(); }
+      div.remove();
+    };
+  });
+  setTimeout(()=>{ if(div.parentNode) div.remove(); }, 15000);
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+document.getElementById('clearDemoBtn').onclick = async ()=>{
+  if(!confirm('Remove all demo tasks and routines? Your own data will not be affected.')) return;
+  state.tasks = state.tasks.filter(t=>!t.demo);
+  state.routines = state.routines.filter(r=>!r.demo);
+  await saveState(); renderAll();
+};
+document.getElementById('resetAllBtn').onclick = async ()=>{
+  if(!confirm('This will permanently erase everything. Continue?')) return;
+  state = defaultState();
+  await saveState(); renderAll();
+};
+
+/* =========================================================
+   UTIL
+========================================================= */
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* =========================================================
+   INIT
+========================================================= */
+async function init(){
+  await loadState();
+  ensureRecurringInstances();
+  await saveState();
+  tickClock();
+  setInterval(tickClock, 1000);
+  renderAll();
+  renderSettingsPerm();
+  checkNotifications();
+  setInterval(checkNotifications, 15000);
+  setInterval(renderDashboard, 30000);
+}
+init();
+</script>
+</body>
+</html>
