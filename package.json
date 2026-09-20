@@ -1,0 +1,15 @@
+{
+  "name": "taskflow",
+  "version": "1.0.0",
+  "description": "TaskFlow — Smart To-Do & Progress Dashboard",
+  "main": "app.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["todo", "task", "dashboard"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
+  }
+}
